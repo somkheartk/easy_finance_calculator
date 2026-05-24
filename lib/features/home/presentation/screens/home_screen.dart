@@ -5,9 +5,7 @@ import 'package:easy_finance_calculator/core/constants/app_colors.dart';
 import 'package:easy_finance_calculator/core/constants/app_constants.dart';
 import 'package:easy_finance_calculator/core/extensions/context_extension.dart';
 import 'package:easy_finance_calculator/core/utils/currency_formatter.dart';
-import 'package:easy_finance_calculator/shared/models/calculation_history.dart';
 import 'package:easy_finance_calculator/shared/models/saved_plan.dart';
-import 'package:easy_finance_calculator/shared/providers/history_provider.dart';
 import 'package:easy_finance_calculator/shared/providers/saved_provider.dart';
 import 'package:easy_finance_calculator/shared/widgets/app_card.dart';
 import 'package:easy_finance_calculator/routes/app_router.dart';
@@ -18,7 +16,6 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final history = ref.watch(historyProvider);
     final favorites = ref.watch(favoritePlansProvider);
 
     return Scaffold(
@@ -56,16 +53,7 @@ class HomeScreen extends ConsumerWidget {
                     _FavoritesList(plans: favorites),
                     const SizedBox(height: 28),
                   ],
-                  _SectionHeader(
-                    title: l10n.recentCalculations,
-                    icon: Icons.history_rounded,
-                  ),
-                  const SizedBox(height: 12),
-                  if (history.isEmpty)
-                    _EmptyState(message: l10n.noRecentCalculations)
-                  else
-                    _RecentList(history: history.take(5).toList()),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -356,181 +344,5 @@ class _FavoriteChip extends StatelessWidget {
   }
 }
 
-class _RecentList extends StatelessWidget {
-  const _RecentList({required this.history});
 
-  final List<CalculationHistory> history;
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: history
-          .map((h) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _HistoryTile(entry: h),
-              ))
-          .toList(),
-    );
-  }
-}
-
-class _HistoryTile extends StatelessWidget {
-  const _HistoryTile({required this.entry});
-
-  final CalculationHistory entry;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _colorForType(entry.type);
-    return AppCard(
-      onTap: () => _navigate(context, entry.type),
-      elevation: 0,
-      border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(_iconForType(entry.type), size: 18, color: color),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _labelForType(context, entry.type),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _formatDate(entry.calculatedAt),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            _summaryFor(entry),
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _navigate(BuildContext context, String type) {
-    switch (type) {
-      case AppConstants.calcDca:
-        context.go(AppRoutes.dca);
-      case AppConstants.calcCarLoan:
-        context.go(AppRoutes.carLoan);
-      case AppConstants.calcHomeLoan:
-        context.go(AppRoutes.homeLoan);
-      case AppConstants.calcSavingGoal:
-        context.go(AppRoutes.savingGoal);
-      case AppConstants.calcCompound:
-        context.go(AppRoutes.compound);
-    }
-  }
-
-  Color _colorForType(String type) => switch (type) {
-        AppConstants.calcDca => AppColors.dcaColor,
-        AppConstants.calcCarLoan => AppColors.carLoanColor,
-        AppConstants.calcHomeLoan => AppColors.homeLoanColor,
-        AppConstants.calcSavingGoal => AppColors.savingGoalColor,
-        _ => AppColors.compoundColor,
-      };
-
-  IconData _iconForType(String type) => switch (type) {
-        AppConstants.calcDca => Icons.trending_up_rounded,
-        AppConstants.calcCarLoan => Icons.directions_car_rounded,
-        AppConstants.calcHomeLoan => Icons.home_rounded,
-        AppConstants.calcSavingGoal => Icons.savings_rounded,
-        _ => Icons.auto_graph_rounded,
-      };
-
-  String _labelForType(BuildContext context, String type) {
-    final l10n = context.l10n;
-    return switch (type) {
-      AppConstants.calcDca => l10n.dcaCalculator,
-      AppConstants.calcCarLoan => l10n.carLoanCalculator,
-      AppConstants.calcHomeLoan => l10n.homeLoanCalculator,
-      AppConstants.calcSavingGoal => l10n.savingGoalCalculator,
-      _ => l10n.compoundInterestCalculator,
-    };
-  }
-
-  String _summaryFor(CalculationHistory entry) {
-    final r = entry.results;
-    if (r.containsKey('futureValue')) {
-      return CurrencyFormatter.format(
-          (r['futureValue'] as num).toDouble(), compact: true);
-    }
-    if (r.containsKey('monthlyPayment')) {
-      return CurrencyFormatter.format(
-          (r['monthlyPayment'] as num).toDouble(), compact: true);
-    }
-    if (r.containsKey('monthlySaving')) {
-      return CurrencyFormatter.format(
-          (r['monthlySaving'] as num).toDouble(), compact: true);
-    }
-    return '';
-  }
-
-  String _formatDate(DateTime dt) {
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inDays < 1) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return '${dt.day}/${dt.month}/${dt.year}';
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Column(
-          children: [
-            Icon(
-              Icons.inbox_outlined,
-              size: 48,
-              color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant
-                        .withOpacity(0.7),
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

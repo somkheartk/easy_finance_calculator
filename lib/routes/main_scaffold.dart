@@ -11,7 +11,6 @@ class MainScaffold extends StatelessWidget {
   static const _tabs = [
     AppRoutes.home,
     AppRoutes.calculators,
-    AppRoutes.saved,
     AppRoutes.settings,
   ];
 
@@ -51,11 +50,6 @@ class MainScaffold extends StatelessWidget {
             icon: const Icon(Icons.calculate_outlined),
             selectedIcon: const Icon(Icons.calculate),
             label: l10n.calculators,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.bookmark_outline),
-            selectedIcon: const Icon(Icons.bookmark),
-            label: l10n.saved,
           ),
           NavigationDestination(
             icon: const Icon(Icons.settings_outlined),

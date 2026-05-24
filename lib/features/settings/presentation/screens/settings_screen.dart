@@ -4,7 +4,6 @@ import 'package:easy_finance_calculator/core/constants/app_colors.dart';
 import 'package:easy_finance_calculator/core/constants/app_constants.dart';
 import 'package:easy_finance_calculator/core/extensions/context_extension.dart';
 import 'package:easy_finance_calculator/shared/providers/currency_provider.dart';
-import 'package:easy_finance_calculator/shared/providers/history_provider.dart';
 import 'package:easy_finance_calculator/shared/providers/locale_provider.dart';
 import 'package:easy_finance_calculator/shared/providers/theme_provider.dart';
 import 'package:easy_finance_calculator/shared/l10n/app_localizations.dart';
@@ -49,25 +48,6 @@ class SettingsScreen extends ConsumerWidget {
             title: l10n.currency,
             subtitle: currency,
             onTap: () => _showCurrencyPicker(context, ref, currency),
-          ),
-
-          // Data
-          _SectionHeader(title: 'Data'),
-          _SettingsTile(
-            icon: Icons.history_rounded,
-            iconColor: AppColors.compoundColor,
-            title: l10n.clearHistory,
-            subtitle: 'Remove all calculation history',
-            onTap: () async {
-              final ok = await showConfirmDialog(
-                context,
-                title: l10n.confirmClearHistory,
-                message: l10n.confirmClearHistoryMsg,
-              );
-              if (ok) {
-                ref.read(historyProvider.notifier).clearAll();
-              }
-            },
           ),
 
           // Info
@@ -226,7 +206,7 @@ class SettingsScreen extends ConsumerWidget {
   void _showPrivacyPolicy(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: Text(context.l10n.privacyPolicy),
         content: const SingleChildScrollView(
           child: Text(
@@ -239,7 +219,7 @@ class SettingsScreen extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('OK'),
           ),
         ],
@@ -256,10 +236,23 @@ class SettingsScreen extends ConsumerWidget {
       children: [
         const SizedBox(height: 12),
         const Text(
-          'A production-ready personal finance calculator supporting '
-          'DCA, Car Loan, Home Loan, Saving Goal, and Compound Interest calculations.\n\n'
-          'Built with Flutter, Riverpod, and Hive.',
+          'Easy Finance Calculator is a personal finance tool that helps you '
+          'plan and calculate your financial goals with ease.\n\n'
+          'Features include:\n'
+          '• DCA (Dollar-Cost Averaging)\n'
+          '• Car Loan & Home Loan\n'
+          '• Saving Goal\n'
+          '• Compound Interest\n\n'
+          'Built with Flutter, Riverpod, and Hive.\n\n'
+          'All data is stored locally on your device — no sign-in required.',
         ),
+        const SizedBox(height: 16),
+        const Text(
+          'Contact Us',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 4),
+        const Text('📧 somkheart.k@gmail.com'),
       ],
     );
   }
